@@ -15,3 +15,381 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+body {
+  margin: 0px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 750px;
+  color: #3f3f3f;
+}
+
+/* TabItem Color */
+.fake-li .url {
+  color:#adb3b8;
+}
+
+.fake-li .title .keyword {
+  color: #ff0000
+}
+
+.fake-li .url .keyword {
+  color: #ff0000
+}
+
+.fake-li .title.active {
+  color: black;
+}
+
+.fake-li .container.selected { 
+  background-color: #4285f4;
+  color: white;
+}
+
+.fake-li .container.selected .url{ 
+  color: white;
+}
+
+.fake-li .container:hover { 
+  background-color: #fdbc5a;
+}
+
+.fake-li .container.selected .title.active {
+  color: white;
+}
+
+/* control item */
+.fake-li .container .closeTabControl .closeTabTip {
+  background-color: #fff;
+  color: #3f3f3f;
+}
+
+.kbd {
+  color: #242729;
+  text-shadow: 0 1px 0 #fff;
+  background-color: #e1e3e5;
+  border: 1px solid #adb3b8;
+  box-shadow: 0 1px 0 rgba(12,13,14,0.2), 0 0 0 2px #fff inset;
+}
+
+/* tree components */
+.fake-ul.treeParent .vertical-line {
+  border-left: 1px dotted #000000;
+}
+
+.splitLabel {
+  border-bottom: 1px dotted #000; 
+}
+
+.splitLabel span { 
+  background:#fff;
+}
+
+.fake-ul .fake-li::before {
+  border-top: 1px dotted #000000;
+}
+
+/* dark mode */
+@media (prefers-color-scheme: dark) {
+  body {
+    margin: 0px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+      "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    width: 750px;
+    color: #e0e0e0; /* Lighter text color for better contrast */
+    background-color: #201c1c; /* Dark background */
+  }
+
+  /* 暗色模式下的 Ant Design 输入框样式覆盖 */
+  .ant-input {
+    background-color: #2a2a2a; /* 暗色模式下的背景色 */
+    color: #d9d9d9; /* 暗色模式下的文本色 */
+    border-color: #3a3a3a; /* 暗色模式下的边框色 */
+  }
+
+  .ant-input:focus {
+    border-color: #565656; /* 聚焦状态下的边框色 */
+    box-shadow: 0 0 0 2px rgba(144, 144, 144, 0.2); /* 聚焦状态下的阴影，调整为适合暗色模式的颜色 */
+  }
+
+  .ant-input:hover {
+    border-color: #484848; /* 悬停状态下的边框色 */
+  }
+
+
+
+  /* TabItem Color */
+  .fake-li .url {
+    color: #9aaab4; /* Lighter for contrast */
+  }
+
+  .fake-li .title .keyword {
+    color: #ff8c00; /* Adjusted for visibility */
+  }
+
+  .fake-li .url .keyword {
+    color: #ff8c00; /* Consistent with .title .keyword */
+  }
+
+  .fake-li .url.active {
+    color: #ffffff; /* Lighter text for active state */
+  }
+
+  .fake-li .title.active {
+    color: #ffffff; /* Lighter text for active state */
+  }
+
+  .fake-li .container.selected { 
+    background-color: #4a6572; /* Darker shade for selected state */
+    color: white;
+  }
+
+  .fake-li .container:hover { 
+    background-color: #305080; /* Darker, warmer color for hover state */
+  }
+
+  .fake-li .container.selected .title.active {
+    color: white; /* Ensures visibility */
+  }
+
+  /* control item */
+  .fake-li .container .closeTabControl .closeTabTip {
+    background-color: #424242; /* Darker background for close control */
+    color: #e0e0e0; /* Lighter text for contrast */
+  }
+
+  /* .kbd {
+    color: #242729;
+    text-shadow: 0 1px 0 #424242;
+    background-color: #616161; 
+    border: 1px solid #9aaab4;
+    box-shadow: 0 1px 0 rgba(12,13,14,0.2), 0 0 0 2px #424242 inset;
+  }
+
+  .kbd:hover {
+    background-color: #555;
+    color: #ddd; 
+    border-color: #666; 
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); 
+  } */
+
+  .kbd {
+    background-color: #636e72; /* 调整为更亮的灰色调 */
+    color: #f5f5f5; /* 调整文字颜色为更亮的色调以增强对比度 */
+    border: 1px solid #77878a; /* 轻微调整边框颜色以匹配背景 */
+    box-shadow: 0 1px 0 rgba(255,255,255,0.1), 0 0 0 2px #2d2d2d inset; /* 调整内阴影以增加深度 */
+    text-shadow: 0 1px 0 #000; /* 调整文字阴影以增加立体感 */
+  }
+
+  .kbd:hover {
+    background-color: #717d7e; /* 鼠标悬停时的背景色，相比普通状态更亮一点 */
+    color: #ffffff; /* 鼠标悬停时的文字颜色，保持高对比度 */
+    border-color: #8696a7; /* 鼠标悬停时的边框颜色，略为亮色 */
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* 鼠标悬停时增加的光晕效果 */
+  }
+
+
+  /* tree components */
+  .fake-ul.treeParent .vertical-line {
+    border-left: 1px dotted #888888; /* Lighter border for visibility */
+  }
+
+  .splitLabel {
+    border-bottom: 1px dotted #888; /* Lighter border for visibility */
+  }
+
+  .splitLabel span { 
+    background: #121212; /* Matching the body background */
+  }
+
+  .fake-ul .fake-li::before {
+    border-top: 1px dotted #888888; /* Lighter border for visibility */
+  }
+}
+
+/* Below for tab tree view */
+
+.tabTreeViewContainer {
+  padding: 10px 0px 10px 0px;
+  max-height: 568px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.fake-ul {
+  position: relative;
+  padding-left: 20px;
+  /* list-style-type: none; */
+}
+
+.fake-li {
+  position: relative;
+}
+
+.fake-ul .fake-li::before {
+  content: "";
+  width: 8px;
+  position: absolute;
+  top: 14px;
+  left: -4px;
+}
+
+.fake-li img {
+  width: 20px;
+}
+
+.fake-li .title {
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  line-height: 1.2;
+  /* display: block; */
+}
+
+.fake-li .searchItem {
+  position: relative;
+  bottom: 1px;
+  font-size: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  line-height: 1.6;
+}
+
+.fake-li .url {
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+  line-height: 1.2;
+  overflow: hidden;
+}
+
+
+.fake-li .title.active {
+  font-weight: 550;
+  /* color: #000000; */
+}
+
+.fake-li .container {
+  width: 100%;
+  position: relative;
+  padding: 2px;
+  /* margin-top: 1px; */
+}
+
+.fake-li .container .closeTabControl {
+  float: right;
+  padding: 3px 4px 3px 4px;
+  font-size: 14px;
+}
+
+.fake-li .container .closeTabControl .closeTabTip {
+  padding: 4px 7px 5px 7px;
+  height: 24px;
+  /* border:1px dashed #ff4d4f; */
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+  border-bottom-left-radius: 2px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-style: italic;
+  line-height: 24px;
+}
+
+.kbd {
+  display: inline-block;
+  margin: 0 .1em;
+  padding: .1em .6em;
+  font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.4;
+  white-space: nowrap;
+  border-radius: 3px;
+}
+
+
+
+.fake-li .container .closeTabControl .closeTabButton {
+  display: none;
+}
+
+.fake-li .container:hover .closeTabControl .closeTabButton {
+  display: inline;
+}
+
+.fake-li .container.selected:hover .closeTabControl .closeTabButton{
+  display: inline;
+}
+
+.fake-li .container .closeTabControl .closeTabTip {
+  display: none;
+}
+
+.fake-li .container.selected .closeTabControl .closeTabTip {
+  display: inline;
+}
+
+.fake-li .container.selected:hover .closeTabControl .closeTabTip {
+  display: none;
+}
+
+
+/* .fake-ul.treeParent::before {
+  content: "";
+  width: 2px;
+  border-left: 1px dotted #c7c5c5;
+  height: 100%;
+  position: absolute;
+  left: 13px;
+} */
+
+.fake-ul.treeParent .vertical-line {
+  min-height: 50px;
+  width: 2px;
+  position: absolute;
+  left: 14px;
+  top: -2px;
+}
+
+.front-icon {
+  font-size: 20px;
+}
+
+.icon-container {
+  margin: 3px;
+  float: left;
+}
+
+.content-container {
+  margin-left: 26px;
+  /* border-style: dotted; */
+  /* border-width: 1px 0px 0px 0px; */
+}
+
+.operationTip {
+  width: 100%; 
+  text-align: center; 
+}
+
+.splitLabel {
+  width: 100%; 
+  text-align: center; 
+  line-height: 0.1em;
+  margin: 20px 0 10px; 
+}
+
+.splitLabel span { 
+  padding:0 10px; 
+}

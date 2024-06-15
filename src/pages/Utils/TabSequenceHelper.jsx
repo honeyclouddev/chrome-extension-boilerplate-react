@@ -1,6 +1,6 @@
 export default class TabSequenceHelper {
-    constructor(rootNode, bookmarkRootNode, googleSearchNode) {
-        this.refreshQueue(rootNode, bookmarkRootNode, googleSearchNode);
+    constructor(rootNode, googleSearchNode) {
+        this.refreshQueue(rootNode, googleSearchNode);
     }
 
     getNextTab() {
@@ -20,10 +20,9 @@ export default class TabSequenceHelper {
         return this.tabList[this.currentIdx].tab;
     }
 
-    refreshQueue(rootNode, bookmarkRootNode, googleSearchNode) {
+    refreshQueue(rootNode, googleSearchNode) {
         this.tabList = [];
         this.dfs(rootNode);
-        this.dfs(bookmarkRootNode);
         this.dfs(googleSearchNode);
         this.currentIdx = -1;
     }

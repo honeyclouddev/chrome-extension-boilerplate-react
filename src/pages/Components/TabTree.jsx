@@ -1,146 +1,95 @@
 import React from 'react';
+import { Input } from 'antd';
 import TabTreeView from './TabTreeView';
 import TabTreeNode from '../Utils/TabTreeNode';
-import { Input } from 'antd';
 import TabSequenceHelper from '../Utils/TabSequenceHelper';
 import GoogleSuggestHelper from '../Utils/GoogleSuggestHelper';
 
+// Maximum number of bookmarks to show
 const MAX_SHOW_BOOKMARK_COUNT = 30;
-// const MIN_GOOGLE_SEARCH_INFER_COUNT = 3;
-// const GOOGLE_SEARCH_INFER_COUNT_NO_LIMIT = -1;
 
 export default class TabTree extends React.Component {
     constructor(props) {
         super(props);
+
+        // Initializing class properties
         this.initializer = this.props.initializer;
-        const initalRootNode = new TabTreeNode();
-        const bookmarkRootNode = new TabTreeNode();
-        const googleSuggestRootNode = new TabTreeNode();
+        
+        // Setting initial state with root nodes and selected tab
         this.state = {
-            selectedTab: { id: -1 },
-            keyword: "",
-            rootNode: initalRootNode,
-            bookmarkRootNode: bookmarkRootNode,
-            googleSuggestRootNode: googleSuggestRootNode,
-        }
-        this.refreshRootNode();
-        this.props.chrome.tabs.onUpdated.addListener(this.onTabUpdate);
-        this.props.chrome.tabs.onRemoved.addListener(this.onTabRemoved);
+            selectedTab: { id: -1 }, // No tab selected initially
+            keyword: "", // Initial search keyword is empty
+            rootNode: new TabTreeNode(), // Root node for tabs
+            bookmarkRootNode: new TabTreeNode(), // Root node for bookmarks
+            googleSuggestRootNode: new TabTreeNode(), // Root node for Google suggestions
+        };
+
+        // References for search field and container
         this.initailKeyword = "";
         this.searchFieldRef = React.createRef();
         this.selfRef = React.createRef();
-        this.TabSequenceHelper = new TabSequenceHelper(initalRootNode, bookmarkRootNode, googleSuggestRootNode);
+
+        // Helpers for tab sequence and Google suggestions
+        this.TabSequenceHelper = new TabSequenceHelper(
+            this.state.rootNode,
+            this.state.bookmarkRootNode,
+            this.state.googleSuggestRootNode
+        );
         this.googleSuggestHelper = new GoogleSuggestHelper();
-        this.altKeyDown = false;
-        this.searchInputInComposition = false;
-    }
+        this.altKeyDown = false; // Flag for Alt key press
+        this.searchInputInComposition = false; // Flag for input composition state (e.g., IME input)
 
-    onKeyDown = (e) => {
-        // console.log(e.key);
-        if (e.key === 'ArrowDown') {
-            this.focusNextTabItem();
-        }
+        // Event listeners for Chrome tabs updates and removals
+        this.props.chrome.tabs.onUpdated.addListener(this.onTabUpdate);
+        this.props.chrome.tabs.onRemoved.addListener(this.onTabRemoved);
 
-        if (e.key === 'ArrowUp') {
-            this.focusPrevTabItem();
-        }
-
-        if (e.key === 'Enter') {
-            // block the search behavior if the searchInput is in composition such as using input method
-            if (this.searchInputInComposition === true) {
-                this.searchInputInComposition = false;
-                return;
-            }
-            this.onContainerClick(this.state.selectedTab)
-        }
-
-        if (e.key === 'Alt') {
-            this.altKeyDown = true;
-            this.searchFieldRef.current.blur();
-            return;
-        }
-        // In mac's chrome, when press Alt + w, it will trigger '∑'
-        if (this.altKeyDown && (e.key === 'w' || e.key === 'W' || e.key === '∑')) {
-            if (this.state.selectedTab.id !== -1) {
-                this.onCloseAllTabs(this.TabSequenceHelper.getNodeByTabId(this.state.selectedTab.id, this.state.rootNode))
-            }
-            return;
-        }
-        this.focusSearchField();
-    }
-
-    onKeyUp = (e) => {
-        if (e.key === 'Alt') {
-            this.altKeyDown = false;
-            this.focusSearchField();
-        }
-    }
-
-    focusNextTabItem = () => {
-        let selectedTab = this.TabSequenceHelper.getNextTab();
-        if (selectedTab) {
-            this.setState({
-                selectedTab
-            });
-        }
-    }
-
-    focusPrevTabItem = () => {
-        let selectedTab = this.TabSequenceHelper.getPreviousTab();
-        if (selectedTab) {
-            this.setState({
-                selectedTab
-            });
-        }
+        // Initial load of root nodes
+        this.refreshRootNode();
     }
 
     componentDidMount() {
+        // Focus on search field when the component mounts
         this.focusSearchField();
+        // Add keydown and keyup event listeners
         document.addEventListener("keydown", this.onKeyDown, false);
         document.addEventListener("keyup", this.onKeyUp, false);
     }
 
+    componentWillUnmount() {
+        // Remove event listeners when the component unmounts
+        document.removeEventListener("keydown", this.onKeyDown, false);
+        document.removeEventListener("keyup", this.onKeyUp, false);
+    }
+
+    // Focus the search input field
     focusSearchField = () => {
         this.searchFieldRef.current.focus();
     }
 
+    // Blur (unfocus) the search input field
     blurSearchField = () => {
         this.searchFieldRef.current.blur();
     }
 
+    // Refresh the root nodes (tabs, bookmarks, and Google suggestions)
     refreshRootNode = async (keyword = undefined) => {
-        let rootNode = await this.initializer.getTree(keyword);
-        let activeTab = await this.initializer.getActiveTab();
-        let bookmarkRootNode = this.getTopNBookMarks(await this.initializer.getBookmarks(keyword), MAX_SHOW_BOOKMARK_COUNT);
-        // this.googleSuggestHelper.fetchGoogleSearchSuggestion(keyword).then(res => console.log(res))
+        const rootNode = await this.initializer.getTree(keyword);
+        const activeTab = await this.initializer.getActiveTab();
+        const bookmarkRootNode = this.getTopNBookMarks(
+            await this.initializer.getBookmarks(keyword),
+            MAX_SHOW_BOOKMARK_COUNT
+        );
+
         this.setState({
             rootNode: rootNode,
             bookmarkRootNode: bookmarkRootNode,
-            selectedTab: keyword ? {id: -1} : activeTab,
-        })
-        // put the google search suggestion here to avoid network latency impaction towards page update.
-        // let maxInferenceCount = rootNode.children.length > 0 || bookmarkRootNode.children.length > 0 ? MIN_GOOGLE_SEARCH_INFER_COUNT : GOOGLE_SEARCH_INFER_COUNT_NO_LIMIT
-        // let googleSuggestRootNode = this.selectGoogleSearchInference(await this.googleSuggestHelper.genGoogleSuggestRootNode(keyword), maxInferenceCount);
-        // this.setState({
-        //     googleSuggestRootNode: googleSuggestRootNode
-        // })
+            selectedTab: keyword ? { id: -1 } : activeTab,
+        });
+
+        // Optionally fetch Google search suggestions here
     }
 
-    selectGoogleSearchInference = (root, maxCount) => {
-        if (maxCount === -1) {
-            return root;
-        }
-        if (root && root.children) {
-            root.children = root.children.slice(0, maxCount)
-        }
-        return root
-    }
-
-    updateTabSequence = () => {
-        this.TabSequenceHelper.refreshQueue(this.state.rootNode, this.state.bookmarkRootNode, this.state.googleSuggestRootNode);
-        this.TabSequenceHelper.setCurrentIdx(this.state.selectedTab);
-    }
-
+    // Limit the number of bookmarks displayed
     getTopNBookMarks = (bookmarkRootNode, count) => {
         if (bookmarkRootNode.children.length > count) {
             bookmarkRootNode.children = bookmarkRootNode.children.slice(0, count);
@@ -148,104 +97,80 @@ export default class TabTree extends React.Component {
         return bookmarkRootNode;
     }
 
+    // Handle tab updates (e.g., title, favicon, status changes)
     onTabUpdate = (tabId, changeInfo, tab) => {
-        let rootNode = this.state.rootNode;
-        if (changeInfo.title) {
-            rootNode.setTitleById(tabId, changeInfo.title);
-            this.setState({
-                rootNode: rootNode
-            });
-        }
-        if (changeInfo.favIconUrl) {
-            rootNode.setFavIconUrlById(tabId, changeInfo.favIconUrl);
-            this.setState({
-                rootNode: rootNode
-            });
-        }
+        const rootNode = this.state.rootNode;
 
-        if (changeInfo.status) {
-            rootNode.setStatusById(tabId, changeInfo.status);
-            this.setState({
-                rootNode: rootNode
-            });
-        }
+        if (changeInfo.title) rootNode.setTitleById(tabId, changeInfo.title);
+        if (changeInfo.favIconUrl) rootNode.setFavIconUrlById(tabId, changeInfo.favIconUrl);
+        if (changeInfo.status) rootNode.setStatusById(tabId, changeInfo.status);
+
+        this.setState({ rootNode });
     }
 
-    onTabRemoved = (tabId, removeInfo) => {
+    // Handle tab removal
+    onTabRemoved = () => {
         this.refreshRootNode(this.state.keyword);
     }
 
-    onCloseAllTabs = (tNode) => {
-        this.props.chrome.tabs.remove(tNode.getAllTabIds(), () => {
-
-        });
+    // Handle key down events
+    onKeyDown = (e) => {
+        if (e.key === 'ArrowDown') this.focusNextTabItem();
+        if (e.key === 'ArrowUp') this.focusPrevTabItem();
+        if (e.key === 'Enter' && !this.searchInputInComposition) {
+            this.onContainerClick(this.state.selectedTab);
+        }
+        if (e.key === 'Alt') {
+            this.altKeyDown = true;
+            this.searchFieldRef.current.blur();
+        }
+        if (this.altKeyDown && (e.key.toLowerCase() === 'w' || e.key === '∑')) {
+            if (this.state.selectedTab.id !== -1) {
+                this.onCloseAllTabs(this.TabSequenceHelper.getNodeByTabId(this.state.selectedTab.id, this.state.rootNode));
+            }
+        }
+        this.focusSearchField();
     }
 
-    onClosedButtonClick = (tab) => {
-        this.props.chrome.tabs.remove(tab.id, () => {
-            //TODO: check why this callback is not ensured to call AFTER removed.
-            // this.refreshRootNode();
-        })
-    }
-
-    onContainerClick = (tab) => {
-        if (this.noTabSelected(tab)) {
-            this.searchByGoogle(this.state.keyword);
-        }else if (tab.isBookmark) {
-            this.props.chrome.tabs.create({
-                url: tab.url
-            }, (tab) => {
-                
-            })
-        } else if (tab.isGoogleSearch) {
-            this.searchByGoogle(tab.title);
-        } else {
-            this.props.chrome.tabs.update(tab.id, { 
-                active: true
-            })
+    // Handle key up events
+    onKeyUp = (e) => {
+        if (e.key === 'Alt') {
+            this.altKeyDown = false;
+            this.focusSearchField();
         }
     }
 
-    noTabSelected = (tab) => {
-        return tab.id === -1;
+    // Focus on the next tab item in the sequence
+    focusNextTabItem = () => {
+        const selectedTab = this.TabSequenceHelper.getNextTab();
+        if (selectedTab) {
+            this.setState({ selectedTab });
+        }
     }
 
-    googleSearchEnabled = () => {
-        return true;
+    // Focus on the previous tab item in the sequence
+    focusPrevTabItem = () => {
+        const selectedTab = this.TabSequenceHelper.getPreviousTab();
+        if (selectedTab) {
+            this.setState({ selectedTab });
+        }
     }
 
-    googleSearchSuggestEnabled = () => {
-        return true;
-    }
-
-    searchByGoogle = (query) => {
-        const url = `https://www.google.com/search?q=${query}`;
-        this.props.chrome.tabs.create({
-            url: url
-        }, (tab) => {
-
-        })
-    }
-
+    // Handle search text change
     onSearchTextChanged = (e) => {
-        let keyword = this.normalizeString(e.target.value);
-        /*these codes are used to improve effeciency */
-        // if (e.target.value.length <= 1) {
-        //     keyword = this.initailKeyword;
-        // }
-        this.setState({
-            keyword,
-        });
+        const keyword = this.normalizeString(e.target.value);
+        this.setState({ keyword });
         this.refreshRootNode(keyword);
     }
 
-    normalizeString(str) {
+    // Normalize string to escape backslashes
+    normalizeString = (str) => {
         return str.replace(/\\/g, "\\\\");
     }
 
-    /* used when let scrollbar in tabTreeViewContainer*/
+    // Handle tab item selection (e.g., scrolling into view)
     onTabItemSelected = (rect) => {
-        let selfRect = this.selfRef.current.getBoundingClientRect();
+        const selfRect = this.selfRef.current.getBoundingClientRect();
         if (rect.bottom > selfRect.bottom) {
             this.selfRef.current.scrollTop += (rect.bottom - selfRect.bottom);
         } else if (rect.top < selfRect.top) {
@@ -253,53 +178,120 @@ export default class TabTree extends React.Component {
         }
     }
 
+    // Handle container click (open tab or search)
+    onContainerClick = (tab) => {
+        if (this.noTabSelected(tab)) {
+            this.searchByGoogle(this.state.keyword);
+        } else if (tab.isBookmark) {
+            this.props.chrome.tabs.create({ url: tab.url });
+        } else if (tab.isGoogleSearch) {
+            this.searchByGoogle(tab.title);
+        } else {
+            this.props.chrome.tabs.update(tab.id, { active: true });
+        }
+    }
+
+    // Check if no tab is selected
+    noTabSelected = (tab) => {
+        return tab.id === -1;
+    }
+
+    // Perform a Google search with the given query
+    searchByGoogle = (query) => {
+        const url = `https://www.google.com/search?q=${query}`;
+        this.props.chrome.tabs.create({ url });
+    }
+
+    // Handle close button click to remove a tab
+    onClosedButtonClick = (tab) => {
+        this.props.chrome.tabs.remove(tab.id);
+    }
+
+    // Close all tabs related to a given tab node
+    onCloseAllTabs = (tNode) => {
+        this.props.chrome.tabs.remove(tNode.getAllTabIds());
+    }
+
+    // Handle input composition start (e.g., IME input)
     searchInputCompositionStart = () => {
         this.searchInputInComposition = true;
     }
 
+    // Handle input composition end (e.g., IME input)
     searchInputCompositionEnd = () => {
         this.searchInputInComposition = false;
     }
 
-    showSearchTip = () => {
-        return this.googleSearchEnabled() && this.state.rootNode.children.length === 0 && this.state.bookmarkRootNode.children.length === 0;
+    // Update tab sequence based on the current state
+    updateTabSequence = () => {
+        this.TabSequenceHelper.refreshQueue(
+            this.state.rootNode,
+            this.state.bookmarkRootNode,
+            this.state.googleSuggestRootNode
+        );
+        this.TabSequenceHelper.setCurrentIdx(this.state.selectedTab);
     }
 
+    // Check if search tip should be shown
+    showSearchTip = () => {
+        return this.googleSearchEnabled() && 
+               this.state.rootNode.children.length === 0 && 
+               this.state.bookmarkRootNode.children.length === 0;
+    }
+
+    // Check if bookmarks should be shown
     showBookmarks = () => {
         return this.state.bookmarkRootNode.children.length > 0;
     }
-    
+
+    // Check if bookmark title should be shown
     showBookmarkTitle = () => {
         return this.state.rootNode.children.length > 0;
     }
 
+    // Check if Google suggestions should be shown
     showGoogleSuggest = () => {
         return false;
-        // return this.googleSearchEnabled() && this.googleSearchSuggestEnabled() && this.state.googleSuggestRootNode.children.length > 0;
+    }
+
+    // Check if Google search is enabled
+    googleSearchEnabled = () => {
+        return true;
+    }
+
+    // Check if Google search suggestions are enabled
+    googleSearchSuggestEnabled = () => {
+        return true;
     }
 
     render() {
-        this.updateTabSequence()
-        let inputPlaceholder = "Filter";
-        for (let i = 0; i < 108; i++) {
-            inputPlaceholder += ' ';
-        }
-        inputPlaceholder += '↑ and ↓ to select         ⏎ to switch/search';
+        this.updateTabSequence();
+
+        // Placeholder text for search input
+        const inputPlaceholder = "Filter ".padEnd(110, ' ') + '↑ and ↓ to select         ⏎ to switch/search';
 
         let googleSearchTip = null;
         if (this.showSearchTip()) {
             googleSearchTip = (
                 <div>
-                    <div className="operationTip"><span className="kbd">ENTER</span><span> to search on the Internet</span></div>
+                    <div className="operationTip">
+                        <span className="kbd">ENTER</span>
+                        <span> to search on the Internet</span>
+                    </div>
                 </div>
-            )
+            );
         }
 
         let bookmarks = null;
         let bookmarkTitle = null;
         if (this.showBookmarkTitle()) {
-            bookmarkTitle = (<div className="splitLabel"><span>Bookmark & Search</span></div>)
+            bookmarkTitle = (
+                <div className="splitLabel">
+                    <span>Bookmark & Search</span>
+                </div>
+            );
         }
+
         if (this.showBookmarks()) {
             bookmarks = (
                 <div>
@@ -331,7 +323,7 @@ export default class TabTree extends React.Component {
         }
 
         return (
-            <div className="outContainer" >
+            <div className="outContainer">
                 <Input
                     onChange={this.onSearchTextChanged}
                     onCompositionStart={this.searchInputCompositionStart}
@@ -353,6 +345,6 @@ export default class TabTree extends React.Component {
                     {googleSearchTip}
                 </div>
             </div>
-        )
+        );
     }
 }

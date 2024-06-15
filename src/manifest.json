@@ -4,7 +4,9 @@
   "description": "Tree style chrome tabs",
   "permissions": ["bookmarks", "tabs", "storage", "sidePanel"],
   "options_page": "options.html",
-  "background": { "service_worker": "background.bundle.js" },
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },

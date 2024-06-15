@@ -5,9 +5,6 @@ import TabTreeNode from '../Utils/TabTreeNode';
 import TabSequenceHelper from '../Utils/TabSequenceHelper';
 import GoogleSuggestHelper from '../Utils/GoogleSuggestHelper';
 
-// Maximum number of bookmarks to show
-const MAX_SHOW_BOOKMARK_COUNT = 30;
-
 export default class TabTree extends React.Component {
     constructor(props) {
         super(props);
@@ -20,7 +17,6 @@ export default class TabTree extends React.Component {
             selectedTab: { id: -1 }, // No tab selected initially
             keyword: "", // Initial search keyword is empty
             rootNode: new TabTreeNode(), // Root node for tabs
-            bookmarkRootNode: new TabTreeNode(), // Root node for bookmarks
             googleSuggestRootNode: new TabTreeNode(), // Root node for Google suggestions
         };
 
@@ -32,7 +28,6 @@ export default class TabTree extends React.Component {
         // Helpers for tab sequence and Google suggestions
         this.TabSequenceHelper = new TabSequenceHelper(
             this.state.rootNode,
-            this.state.bookmarkRootNode,
             this.state.googleSuggestRootNode
         );
         this.googleSuggestHelper = new GoogleSuggestHelper();
@@ -71,30 +66,17 @@ export default class TabTree extends React.Component {
         this.searchFieldRef.current.blur();
     }
 
-    // Refresh the root nodes (tabs, bookmarks, and Google suggestions)
+    // Refresh the root nodes (tabs, and Google suggestions)
     refreshRootNode = async (keyword = undefined) => {
         const rootNode = await this.initializer.getTree(keyword);
         const activeTab = await this.initializer.getActiveTab();
-        const bookmarkRootNode = this.getTopNBookMarks(
-            await this.initializer.getBookmarks(keyword),
-            MAX_SHOW_BOOKMARK_COUNT
-        );
 
         this.setState({
             rootNode: rootNode,
-            bookmarkRootNode: bookmarkRootNode,
             selectedTab: keyword ? { id: -1 } : activeTab,
         });
 
         // Optionally fetch Google search suggestions here
-    }
-
-    // Limit the number of bookmarks displayed
-    getTopNBookMarks = (bookmarkRootNode, count) => {
-        if (bookmarkRootNode.children.length > count) {
-            bookmarkRootNode.children = bookmarkRootNode.children.slice(0, count);
-        }
-        return bookmarkRootNode;
     }
 
     // Handle tab updates (e.g., title, favicon, status changes)
@@ -182,8 +164,6 @@ export default class TabTree extends React.Component {
     onContainerClick = (tab) => {
         if (this.noTabSelected(tab)) {
             this.searchByGoogle(this.state.keyword);
-        } else if (tab.isBookmark) {
-            this.props.chrome.tabs.create({ url: tab.url });
         } else if (tab.isGoogleSearch) {
             this.searchByGoogle(tab.title);
         } else {
@@ -226,7 +206,6 @@ export default class TabTree extends React.Component {
     updateTabSequence = () => {
         this.TabSequenceHelper.refreshQueue(
             this.state.rootNode,
-            this.state.bookmarkRootNode,
             this.state.googleSuggestRootNode
         );
         this.TabSequenceHelper.setCurrentIdx(this.state.selectedTab);
@@ -235,18 +214,7 @@ export default class TabTree extends React.Component {
     // Check if search tip should be shown
     showSearchTip = () => {
         return this.googleSearchEnabled() && 
-               this.state.rootNode.children.length === 0 && 
-               this.state.bookmarkRootNode.children.length === 0;
-    }
-
-    // Check if bookmarks should be shown
-    showBookmarks = () => {
-        return this.state.bookmarkRootNode.children.length > 0;
-    }
-
-    // Check if bookmark title should be shown
-    showBookmarkTitle = () => {
-        return this.state.rootNode.children.length > 0;
+               this.state.rootNode.children.length === 0
     }
 
     // Check if Google suggestions should be shown
@@ -278,31 +246,6 @@ export default class TabTree extends React.Component {
                         <span className="kbd">ENTER</span>
                         <span> to search on the Internet</span>
                     </div>
-                </div>
-            );
-        }
-
-        let bookmarks = null;
-        let bookmarkTitle = null;
-        if (this.showBookmarkTitle()) {
-            bookmarkTitle = (
-                <div className="splitLabel">
-                    <span>Bookmark & Search</span>
-                </div>
-            );
-        }
-
-        if (this.showBookmarks()) {
-            bookmarks = (
-                <div>
-                    {bookmarkTitle}
-                    <TabTreeView
-                        onTabItemSelected={this.onTabItemSelected}
-                        selectedTabId={this.state.selectedTab.id}
-                        rootNode={this.state.bookmarkRootNode}
-                        onContainerClick={this.onContainerClick}
-                        keyword={this.state.keyword}
-                    />
                 </div>
             );
         }
@@ -340,7 +283,6 @@ export default class TabTree extends React.Component {
                         onContainerClick={this.onContainerClick}
                         onClosedButtonClick={this.onCloseAllTabs}
                     />
-                    {bookmarks}
                     {googleSearchSuggest}
                     {googleSearchTip}
                 </div>
